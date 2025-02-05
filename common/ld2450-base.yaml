@@ -1,17 +1,17 @@
 esphome:
-  on_boot: 
+  on_boot:
     priority: -100
     then:
       - button.press: get_mmwave_firmware
       - binary_sensor.template.publish:
           id: zone1_occupancy
-          state: false 
+          state: false
       - binary_sensor.template.publish:
           id: zone2_occupancy
-          state: false 
+          state: false
       - binary_sensor.template.publish:
           id: zone3_occupancy
-          state: false 
+          state: false
       - binary_sensor.template.publish:
           id: zone4_occupancy
           state: false
@@ -20,16 +20,15 @@ globals:
   - id: mmwave_update_time
     type: unsigned long
     restore_value: False
-    initial_value: '0'
+    initial_value: "0"
   - id: target1_last_update
     type: unsigned long
-    initial_value: '0'
+    initial_value: "0"
     restore_value: False
   - id: target1_reset
     type: int
     initial_value: "1"
     restore_value: False
-
 
 interval:
   - interval: 1s
@@ -61,26 +60,40 @@ button:
     internal: True
     entity_category: config
     disabled_by_default: True
-    on_press: 
+    on_press:
       then:
-      - switch.turn_on: mmwave_configuration
-      - delay: 1s
-      - uart.write:
-          id: uart_bus
-          data: [0xFD, 0xFC, 0xFB, 0xFA, 0x02, 0x00, 0xA0, 0x00, 0x04, 0x03, 0x02, 0x01]
-      - lambda: |-
-          uint8_t response[20];
-          if (id(uart_bus).read_array(response, 20)) {
-            int firmware_major = response[13];
-            int firmware_minor = response[12];
-            char firmware_version_str[32];
-            sprintf(firmware_version_str, "V%d.%02d", firmware_major, firmware_minor);
-            id(firmware_version).publish_state(std::string(firmware_version_str));
-          } else {
-            id(firmware_version).publish_state("Unknown");
-          }
-      - switch.turn_off: mmwave_configuration
-      - delay: 1s
+        - switch.turn_on: mmwave_configuration
+        - delay: 1s
+        - uart.write:
+            id: uart_bus
+            data:
+              [
+                0xFD,
+                0xFC,
+                0xFB,
+                0xFA,
+                0x02,
+                0x00,
+                0xA0,
+                0x00,
+                0x04,
+                0x03,
+                0x02,
+                0x01,
+              ]
+        - lambda: |-
+            uint8_t response[20];
+            if (id(uart_bus).read_array(response, 20)) {
+              int firmware_major = response[13];
+              int firmware_minor = response[12];
+              char firmware_version_str[32];
+              sprintf(firmware_version_str, "V%d.%02d", firmware_major, firmware_minor);
+              id(firmware_version).publish_state(std::string(firmware_version_str));
+            } else {
+              id(firmware_version).publish_state("Unknown");
+            }
+        - switch.turn_off: mmwave_configuration
+        - delay: 1s
   - platform: template
     name: "Reboot mmWave Sensor"
     id: reboot_mmwave_sensor
@@ -88,11 +101,25 @@ button:
     entity_category: config
     on_press:
       then:
-      - switch.turn_on: mmwave_configuration
-      - delay: 1s  
-      - uart.write:
-          id: uart_bus
-          data: [0xFD, 0xFC, 0xFB, 0xFA, 0x02, 0x00, 0xA3, 0x00, 0x04, 0x03, 0x02, 0x01]
+        - switch.turn_on: mmwave_configuration
+        - delay: 1s
+        - uart.write:
+            id: uart_bus
+            data:
+              [
+                0xFD,
+                0xFC,
+                0xFB,
+                0xFA,
+                0x02,
+                0x00,
+                0xA3,
+                0x00,
+                0x04,
+                0x03,
+                0x02,
+                0x01,
+              ]
   - platform: template
     name: "Factory Reset mmWave Sensor"
     id: factory_reset_mmwave_sensor
@@ -100,16 +127,30 @@ button:
     entity_category: config
     on_press:
       then:
-      - logger.log: "Performing Factory Reset"
-      - switch.turn_on: mmwave_configuration
-      - delay: 2s
-      - uart.write:
-          id: uart_bus
-          data: [0xFD, 0xFC, 0xFB, 0xFA, 0x02, 0x00, 0xA2, 0x00, 0x04, 0x03, 0x02, 0x01]
-      - delay: 2s
-      - switch.turn_off: mmwave_configuration
-      - delay: 2s
-      - button.press: reboot_mmwave_sensor
+        - logger.log: "Performing Factory Reset"
+        - switch.turn_on: mmwave_configuration
+        - delay: 2s
+        - uart.write:
+            id: uart_bus
+            data:
+              [
+                0xFD,
+                0xFC,
+                0xFB,
+                0xFA,
+                0x02,
+                0x00,
+                0xA2,
+                0x00,
+                0x04,
+                0x03,
+                0x02,
+                0x01,
+              ]
+        - delay: 2s
+        - switch.turn_off: mmwave_configuration
+        - delay: 2s
+        - button.press: reboot_mmwave_sensor
 
 switch:
   - platform: template
@@ -123,11 +164,41 @@ switch:
     turn_on_action:
       - uart.write:
           id: uart_bus
-          data: [0xFD, 0xFC, 0xFB, 0xFA, 0x04, 0x00, 0xFF, 0x00, 0x01, 0x00, 0x04, 0x03, 0x02, 0x01]
+          data:
+            [
+              0xFD,
+              0xFC,
+              0xFB,
+              0xFA,
+              0x04,
+              0x00,
+              0xFF,
+              0x00,
+              0x01,
+              0x00,
+              0x04,
+              0x03,
+              0x02,
+              0x01,
+            ]
     turn_off_action:
       - uart.write:
           id: uart_bus
-          data: [0xFD, 0xFC, 0xFB, 0xFA, 0x02, 0x00, 0xFE, 0x00, 0x04, 0x03, 0x02, 0x01]
+          data:
+            [
+              0xFD,
+              0xFC,
+              0xFB,
+              0xFA,
+              0x02,
+              0x00,
+              0xFE,
+              0x00,
+              0x04,
+              0x03,
+              0x02,
+              0x01,
+            ]
 
   - platform: template
     name: "mmWave Bluetooth"
@@ -140,9 +211,24 @@ switch:
       - delay: 2s
       - uart.write:
           id: uart_bus
-          data: [0xFD, 0xFC, 0xFB, 0xFA, 0x04, 0x00, 0xA4, 0x00, 0x01, 0x00, 0x04, 0x03, 0x02, 0x01]  # Turn on Bluetooth
+          data: [
+              0xFD,
+              0xFC,
+              0xFB,
+              0xFA,
+              0x04,
+              0x00,
+              0xA4,
+              0x00,
+              0x01,
+              0x00,
+              0x04,
+              0x03,
+              0x02,
+              0x01,
+            ] # Turn on Bluetooth
       - delay: 2s
-      - button.press: reboot_mmwave_sensor  # Reboot after enabling Bluetooth
+      - button.press: reboot_mmwave_sensor # Reboot after enabling Bluetooth
       - delay: 2s
       - switch.turn_off: mmwave_configuration
 
@@ -151,16 +237,31 @@ switch:
       - delay: 2s
       - uart.write:
           id: uart_bus
-          data: [0xFD, 0xFC, 0xFB, 0xFA, 0x04, 0x00, 0xA4, 0x00, 0x00, 0x00, 0x04, 0x03, 0x02, 0x01]  # Turn off Bluetooth
+          data: [
+              0xFD,
+              0xFC,
+              0xFB,
+              0xFA,
+              0x04,
+              0x00,
+              0xA4,
+              0x00,
+              0x00,
+              0x00,
+              0x04,
+              0x03,
+              0x02,
+              0x01,
+            ] # Turn off Bluetooth
       - delay: 2s
-      - button.press: reboot_mmwave_sensor  # Reboot after enabling Bluetooth
+      - button.press: reboot_mmwave_sensor # Reboot after enabling Bluetooth
       - delay: 2s
       - switch.turn_off: mmwave_configuration
 
   - platform: template
     name: "Stale Target Reset"
     id: aggressive_target_clearing
-    restore_mode: RESTORE_DEFAULT_OFF 
+    restore_mode: RESTORE_DEFAULT_OFF
     optimistic: True
     entity_category: config
 
@@ -506,123 +607,123 @@ sensor:
     name: "Target 1 X"
     id: target1_x
     accuracy_decimals: 0
-    unit_of_measurement: 'mm'
+    unit_of_measurement: "mm"
     state_class: measurement
     device_class: distance
   - platform: template
     name: "Target 1 Y"
     id: target1_y
     accuracy_decimals: 0
-    unit_of_measurement: 'mm'
+    unit_of_measurement: "mm"
     state_class: measurement
     device_class: distance
   - platform: template
     name: "Target 1 Speed"
     id: target1_speed
     accuracy_decimals: 2
-    unit_of_measurement: 'm/s'
+    unit_of_measurement: "m/s"
     state_class: measurement
     device_class: speed
   - platform: template
     name: "Target 1 Resolution"
     id: target1_resolution
     accuracy_decimals: 0
-    unit_of_measurement: 'mm'
+    unit_of_measurement: "mm"
     state_class: measurement
     device_class: distance
   - platform: template
     name: "Target 2 X"
     id: target2_x
     accuracy_decimals: 0
-    unit_of_measurement: 'mm'
+    unit_of_measurement: "mm"
     state_class: measurement
     device_class: distance
   - platform: template
     name: "Target 2 Y"
     id: target2_y
     accuracy_decimals: 0
-    unit_of_measurement: 'mm'
+    unit_of_measurement: "mm"
     state_class: measurement
     device_class: distance
   - platform: template
     name: "Target 2 Speed"
     id: target2_speed
     accuracy_decimals: 2
-    unit_of_measurement: 'm/s'
+    unit_of_measurement: "m/s"
     state_class: measurement
     device_class: speed
   - platform: template
     name: "Target 2 Resolution"
     id: target2_resolution
     accuracy_decimals: 0
-    unit_of_measurement: 'mm'
+    unit_of_measurement: "mm"
     state_class: measurement
     device_class: distance
   - platform: template
     name: "Target 3 X"
     id: target3_x
     accuracy_decimals: 0
-    unit_of_measurement: 'mm'
+    unit_of_measurement: "mm"
     state_class: measurement
     device_class: distance
   - platform: template
     name: "Target 3 Y"
     id: target3_y
     accuracy_decimals: 0
-    unit_of_measurement: 'mm'
+    unit_of_measurement: "mm"
     state_class: measurement
     device_class: distance
   - platform: template
     name: "Target 3 Speed"
     id: target3_speed
     accuracy_decimals: 2
-    unit_of_measurement: 'm/s'
+    unit_of_measurement: "m/s"
     state_class: measurement
     device_class: speed
   - platform: template
     name: "Target 3 Resolution"
     id: target3_resolution
     accuracy_decimals: 0
-    unit_of_measurement: 'mm'
+    unit_of_measurement: "mm"
     state_class: measurement
     device_class: distance
   - platform: template
     name: "Target 1 Angle"
     id: target1_angle
     accuracy_decimals: 0
-    unit_of_measurement: '°'
+    unit_of_measurement: "°"
     state_class: measurement
   - platform: template
     name: "Target 2 Angle"
     id: target2_angle
     accuracy_decimals: 0
-    unit_of_measurement: '°'
+    unit_of_measurement: "°"
     state_class: measurement
   - platform: template
     name: "Target 3 Angle"
     id: target3_angle
     accuracy_decimals: 0
-    unit_of_measurement: '°'
+    unit_of_measurement: "°"
     state_class: measurement
   - platform: template
     name: "Target 1 Distance"
     id: target1_distance
     accuracy_decimals: 0
-    unit_of_measurement: 'mm'
+    unit_of_measurement: "mm"
     state_class: measurement
     device_class: distance
   - platform: template
     name: "Target 2 Distance"
     id: target2_distance
     accuracy_decimals: 0
-    unit_of_measurement: 'mm'
+    unit_of_measurement: "mm"
     state_class: measurement
     device_class: distance
   - platform: template
     name: "Target 3 Distance"
     id: target3_distance
     accuracy_decimals: 0
-    unit_of_measurement: 'mm'
+    unit_of_measurement: "mm"
     state_class: measurement
     device_class: distance
   - platform: template
@@ -655,16 +756,15 @@ sensor:
     disabled_by_default: true
     unit_of_measurement: " "
 
-
 uart:
   id: uart_bus
-  tx_pin: 
-    number: GPIO17
+  tx_pin:
+    number: ${tx_pin}
     mode:
       input: true
       pullup: true
-  rx_pin: 
-    number: GPIO16
+  rx_pin:
+    number: ${rx_pin}
     mode:
       input: true
       pullup: true
@@ -680,14 +780,14 @@ uart:
     sequence:
       # - lambda: UARTDebug::log_hex(direction, bytes, ' ');
       - lambda: |-
-          if ((millis() - id(mmwave_update_time)) <= 250) { 
+          if ((millis() - id(mmwave_update_time)) <= 250) {
             return;
           };
           id(mmwave_update_time) = millis();
 
           int16_t p1_x = (uint16_t((bytes[5] << 8) | bytes[4] ));
           if ((bytes[5] & 0x80) >> 7) {
-            p1_x -= pow(2, 15); 
+            p1_x -= pow(2, 15);
           } else {
             p1_x = 0 - p1_x; // was 0 - p1_x;
           }
@@ -705,11 +805,11 @@ uart:
           } else {
             p1_speed = 0 - p1_speed;
           }
-          int16_t p1_distance_resolution = (uint16_t((bytes[11] << 8) | bytes[10] )); 
+          int16_t p1_distance_resolution = (uint16_t((bytes[11] << 8) | bytes[10] ));
 
           int16_t p2_x = (uint16_t((bytes[13] << 8) | bytes[12] ));
           if ((bytes[13] & 0x80) >> 7) {
-            p2_x -=  pow(2, 15); 
+            p2_x -=  pow(2, 15);
           } else {
             p2_x = 0 - p2_x;
           }
@@ -727,11 +827,11 @@ uart:
           } else {
             p2_speed = 0 - p2_speed;
           }
-          int16_t p2_distance_resolution = (uint16_t((bytes[19] << 8) | bytes[18] )); 
+          int16_t p2_distance_resolution = (uint16_t((bytes[19] << 8) | bytes[18] ));
 
           int16_t p3_x = (uint16_t((bytes[21] << 8) | bytes[20] ));
           if ((bytes[21] & 0x80) >> 7) {
-            p3_x -=  pow(2, 15); 
+            p3_x -=  pow(2, 15);
           } else {
             p3_x = 0 - p3_x;
           }
