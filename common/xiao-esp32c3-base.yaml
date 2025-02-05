@@ -33,14 +33,14 @@ improv_serial:
 
 i2c:
   - id: bus_a
-    sda: 8
-    scl: 7
+    sda: ${sda_pin}
+    scl: ${scl_pin}
     scan: true
 
 light:
   - platform: status_led
     name: ESP32 LED
-    pin: GPIO2
+    pin: ${led_pin}
     internal: False
     restore_mode: ALWAYS_OFF
 
