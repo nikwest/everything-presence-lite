@@ -17,7 +17,12 @@ dashboard_import:
   import_full_config: false # or true
 
 packages:
-  device_base: !include common/xiao-esp32c3-base.yaml
+  device_base: !include
+    file: common/xiao-esp32c3-base.yaml
+    vars:
+      led_pin: 2
+      scl_pin: 8
+      sda_pin: 7
   ld2450_base: !include
     file: common/ld2450-base.yaml
     vars:
