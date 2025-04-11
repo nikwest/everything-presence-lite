@@ -21,8 +21,8 @@ packages:
     file: common/xiao-esp32c3-base.yaml
     vars:
       led_pin: 2
-      scl_pin: 8
-      sda_pin: 7
+      scl_pin: 9
+      sda_pin: 8
   ld2450_base: !include
     file: common/ld2450-base.yaml
     vars:
