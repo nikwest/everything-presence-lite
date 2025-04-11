@@ -26,6 +26,6 @@ packages:
   ld2410_base: !include
     file: common/ld2410-base.yaml
     vars:
-      tx_pin: 4
-      rx_pin: 5
+      tx_pin: 5
+      rx_pin: 4
   bluetooth_base: !include common/bluetooth-base.yaml
